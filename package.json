@@ -1,14 +1,14 @@
 {
-  "name": "cat-customs",
-  "displayName": "Cat Customs",
-  "description": "Custom Editor API Samples",
-  "version": "0.0.1",
-  "publisher": "vscode-samples",
+  "name": "vscode-bw-block-editor",
+  "displayName": "BW Block Editor",
+  "description": "The editor for BW blocks",
+  "version": "0.1.0",
+  "publisher": "Yoshiya Hinosawa",
   "private": true,
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-extension-samples"
+    "url": "https://github.com/kt3k/vscode-bw-block-editor"
   },
   "engines": {
     "vscode": "^1.74.0"
@@ -21,29 +21,13 @@
   "contributes": {
     "customEditors": [
       {
-        "viewType": "catCustoms.catScratch",
-        "displayName": "Cat Scratch",
+        "viewType": "kt3k.bwBlock",
+        "displayName": "Block",
         "selector": [
           {
-            "filenamePattern": "*.cscratch"
+            "filenamePattern": "*.block.json"
           }
         ]
-      },
-      {
-        "viewType": "catCustoms.pawDraw",
-        "displayName": "Paw Draw",
-        "selector": [
-          {
-            "filenamePattern": "*.pawdraw"
-          }
-        ]
-      }
-    ],
-    "commands": [
-      {
-        "command": "catCustoms.pawDraw.new",
-        "title": "Create new Paw Draw Document",
-        "category": "Paw Draw"
       }
     ]
   },
