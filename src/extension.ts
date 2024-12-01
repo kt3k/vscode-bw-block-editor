@@ -136,7 +136,7 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
 						<button>Scratch!</button>
 					</div>
 				</div>
-				
+
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
