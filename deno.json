@@ -1,4 +1,14 @@
 {
+  "lint": {
+    "rules": {
+      "exclude": [
+        "require-await",
+        "no-explicit-any",
+        "no-window",
+        "no-window-prefix"
+      ]
+    }
+  },
   "fmt": {
     "semiColons": false
   }

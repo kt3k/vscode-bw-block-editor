@@ -33,9 +33,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "lint": "eslint",
-    "watch": "tsc -w -p ./"
+    "compile": "tsc -p ./"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

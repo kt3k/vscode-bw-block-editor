@@ -1,3 +1,7 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext"/>
+/// <reference lib="dom" />
+
 const vscode = acquireVsCodeApi()
 
 const notesContainer =
@@ -63,11 +67,12 @@ function updateContent(/** @type {string} */ text) {
 window.addEventListener("message", (event) => {
   const message = event.data // The json data that the extension sent
   switch (message.type) {
-    case "update":
+    case "update": {
       const text = message.text
       updateContent(text)
       vscode.setState({ text })
       return
+    }
   }
 })
 
