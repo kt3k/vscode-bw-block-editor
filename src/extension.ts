@@ -90,7 +90,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
       this.#context.extensionUri,
       "media",
-      "catScratch.js",
+      "webview.js",
     ))
 
     const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(
@@ -108,23 +108,14 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
       this.#context.extensionUri,
       "media",
-      "catScratch.css",
+      "style.css",
     ))
-
-    // Use a nonce to whitelist which scripts can be run
-    const nonce = getNonce()
 
     return /* html */ `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
 				<meta charset="UTF-8">
-
-				<!--
-				Use a content security policy to only allow loading images from https or from our extension directory,
-				and only allow scripts that have a specific nonce.
-				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -141,7 +132,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 					</div>
 				</div>
 
-				<script nonce="${nonce}" src="${scriptUri}"></script>
+				<script src="${scriptUri}"></script>
 			</body>
 			</html>`
   }
@@ -158,7 +149,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     json.scratches = [
       ...(Array.isArray(json.scratches) ? json.scratches : []),
       {
-        id: getNonce(),
+        id: crypto.randomUUID(),
         text: character,
         created: Date.now(),
       },
@@ -206,14 +197,4 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 
     return vscode.workspace.applyEdit(edit)
   }
-}
-
-function getNonce() {
-  let text = ""
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length))
-  }
-  return text
 }
