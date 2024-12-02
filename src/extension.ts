@@ -1,14 +1,16 @@
-import * as vscode from "vscode";
+import * as vscode from "vscode"
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(
     "kt3k.bwBlock",
     new BlockEdit(context),
-  ));
+  ))
 }
 
-export class BlockEdit implements vscode.CustomTextEditorProvider {
-  private static readonly scratchCharacters = [
+class BlockEdit implements vscode.CustomTextEditorProvider {
+  #context: vscode.ExtensionContext
+
+  static #scratchCharacters = [
     "😸",
     "😹",
     "😺",
@@ -19,11 +21,13 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
     "🙀",
     "😿",
     "🐱",
-  ];
+  ]
 
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(context: vscode.ExtensionContext) {
+    this.#context = context
+  }
 
-  public async resolveCustomTextEditor(
+  async resolveCustomTextEditor(
     document: vscode.TextDocument,
     webviewPanel: vscode.WebviewPanel,
     _token: vscode.CancellationToken,
@@ -31,16 +35,16 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
     // Setup initial content for the webview
     webviewPanel.webview.options = {
       enableScripts: true,
-    };
-    webviewPanel.webview.html = this.getHtmlForWebview(
+    }
+    webviewPanel.webview.html = this.#getHtml(
       webviewPanel.webview,
-    );
+    )
 
     function updateWebview() {
       webviewPanel.webview.postMessage({
         type: "update",
         text: document.getText(),
-      });
+      })
     }
 
     // Hook up event handlers so that we can synchronize the webview with the text document.
@@ -55,60 +59,60 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
       .onDidChangeTextDocument(
         (e) => {
           if (e.document.uri.toString() === document.uri.toString()) {
-            updateWebview();
+            updateWebview()
           }
         },
-      );
+      )
 
     // Make sure we get rid of the listener when our editor is closed.
     webviewPanel.onDidDispose(() => {
-      changeDocumentSubscription.dispose();
-    });
+      changeDocumentSubscription.dispose()
+    })
 
     // Receive message from the webview.
     webviewPanel.webview.onDidReceiveMessage((e) => {
       switch (e.type) {
         case "add":
-          this.addNewScratch(document);
-          return;
+          this.#addNewScratch(document)
+          return
 
         case "delete":
-          this.deleteScratch(document, e.id);
-          return;
+          this.#deleteScratch(document, e.id)
+          return
       }
-    });
+    })
 
-    updateWebview();
+    updateWebview()
   }
 
-  private getHtmlForWebview(webview: vscode.Webview): string {
+  #getHtml(webview: vscode.Webview): string {
     // Local path to script and css for the webview
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-      this.context.extensionUri,
+      this.#context.extensionUri,
       "media",
       "catScratch.js",
-    ));
+    ))
 
     const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(
-      this.context.extensionUri,
+      this.#context.extensionUri,
       "media",
       "reset.css",
-    ));
+    ))
 
     const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
-      this.context.extensionUri,
+      this.#context.extensionUri,
       "media",
       "vscode.css",
-    ));
+    ))
 
     const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-      this.context.extensionUri,
+      this.#context.extensionUri,
       "media",
       "catScratch.css",
-    ));
+    ))
 
     // Use a nonce to whitelist which scripts can be run
-    const nonce = getNonce();
+    const nonce = getNonce()
 
     return /* html */ `
 			<!DOCTYPE html>
@@ -139,18 +143,18 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
 
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
-			</html>`;
+			</html>`
   }
 
-  private addNewScratch(document: vscode.TextDocument) {
-    const json = this.getDocumentAsJson(document);
+  #addNewScratch(document: vscode.TextDocument) {
+    const json = this.#getDocumentAsJson(document)
     const character = BlockEdit
-      .scratchCharacters[
+      .#scratchCharacters[
         Math.floor(
           Math.random() *
-            BlockEdit.scratchCharacters.length,
+            BlockEdit.#scratchCharacters.length,
         )
-      ];
+      ]
     json.scratches = [
       ...(Array.isArray(json.scratches) ? json.scratches : []),
       {
@@ -158,39 +162,39 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
         text: character,
         created: Date.now(),
       },
-    ];
+    ]
 
-    return this.updateTextDocument(document, json);
+    return this.#updateTextDocument(document, json)
   }
 
-  private deleteScratch(document: vscode.TextDocument, id: string) {
-    const json = this.getDocumentAsJson(document);
+  #deleteScratch(document: vscode.TextDocument, id: string) {
+    const json = this.#getDocumentAsJson(document)
     if (!Array.isArray(json.scratches)) {
-      return;
+      return
     }
 
-    json.scratches = json.scratches.filter((note: any) => note.id !== id);
+    json.scratches = json.scratches.filter((note: any) => note.id !== id)
 
-    return this.updateTextDocument(document, json);
+    return this.#updateTextDocument(document, json)
   }
 
-  private getDocumentAsJson(document: vscode.TextDocument): any {
-    const text = document.getText();
+  #getDocumentAsJson(document: vscode.TextDocument): any {
+    const text = document.getText()
     if (text.trim().length === 0) {
-      return {};
+      return {}
     }
 
     try {
-      return JSON.parse(text);
+      return JSON.parse(text)
     } catch {
       throw new Error(
         "Could not get document as json. Content is not valid json",
-      );
+      )
     }
   }
 
-  private updateTextDocument(document: vscode.TextDocument, json: any) {
-    const edit = new vscode.WorkspaceEdit();
+  #updateTextDocument(document: vscode.TextDocument, json: any) {
+    const edit = new vscode.WorkspaceEdit()
 
     // Just replace the entire document every time for this example extension.
     // A more complete extension should compute minimal edits instead.
@@ -198,18 +202,18 @@ export class BlockEdit implements vscode.CustomTextEditorProvider {
       document.uri,
       new vscode.Range(0, 0, document.lineCount, 0),
       JSON.stringify(json, null, 2),
-    );
+    )
 
-    return vscode.workspace.applyEdit(edit);
+    return vscode.workspace.applyEdit(edit)
   }
 }
 
-export function getNonce() {
-  let text = "";
+function getNonce() {
+  let text = ""
   const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+    text += possible.charAt(Math.floor(Math.random() * possible.length))
   }
-  return text;
+  return text
 }
