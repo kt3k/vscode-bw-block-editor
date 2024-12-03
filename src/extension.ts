@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 class BlockEdit implements vscode.CustomTextEditorProvider {
-  #context: vscode.ExtensionContext
+  #uri: vscode.Uri
 
   static #scratchCharacters = [
     "😸",
@@ -24,7 +24,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
   ]
 
   constructor(context: vscode.ExtensionContext) {
-    this.#context = context
+    this.#uri = context.extensionUri
   }
 
   async resolveCustomTextEditor(
@@ -37,13 +37,13 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       enableScripts: true,
     }
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-      this.#context.extensionUri,
+      this.#uri,
       "media",
       "webview.js",
     ))
 
     const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
-      this.#context.extensionUri,
+      this.#uri,
       "media",
       "style.css",
     ))
@@ -67,19 +67,15 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 			</body>
 			</html>`
 
-    function updateWebview() {
-      webview.postMessage({
-        type: "update",
-        text: document.getText(),
-      })
-    }
-
     const changeDocumentSubscription = vscode.workspace
       .onDidChangeTextDocument(
         (e) => {
-          if (e.document.uri.toString() === document.uri.toString()) {
-            updateWebview()
-          }
+          if (e.document.uri.toString() !== document.uri.toString()) return
+
+          webview.postMessage({
+            type: "update",
+            text: document.getText(),
+          })
         },
       )
 
@@ -101,11 +97,14 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       }
     })
 
-    updateWebview()
+    webview.postMessage({
+      type: "update",
+      text: document.getText(),
+    })
   }
 
   #addNewScratch(document: vscode.TextDocument) {
-    const json = this.#getDocumentAsJson(document)
+    const json = JSON.parse(document.getText())
     const character = BlockEdit
       .#scratchCharacters[
         Math.floor(
@@ -126,7 +125,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
   }
 
   #deleteScratch(document: vscode.TextDocument, id: string) {
-    const json = this.#getDocumentAsJson(document)
+    const json = JSON.parse(document.getText())
     if (!Array.isArray(json.scratches)) {
       return
     }
@@ -136,32 +135,13 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     return this.#updateTextDocument(document, json)
   }
 
-  #getDocumentAsJson(document: vscode.TextDocument): any {
-    const text = document.getText()
-    if (text.trim().length === 0) {
-      return {}
-    }
-
-    try {
-      return JSON.parse(text)
-    } catch {
-      throw new Error(
-        "Could not get document as json. Content is not valid json",
-      )
-    }
-  }
-
   #updateTextDocument(document: vscode.TextDocument, json: any) {
     const edit = new vscode.WorkspaceEdit()
-
-    // Just replace the entire document every time for this example extension.
-    // A more complete extension should compute minimal edits instead.
     edit.replace(
       document.uri,
       new vscode.Range(0, 0, document.lineCount, 0),
       JSON.stringify(json, null, 2),
     )
-
     return vscode.workspace.applyEdit(edit)
   }
 }
