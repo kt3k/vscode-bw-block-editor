@@ -1,11 +1,13 @@
 // @deno-types="@types/vscode"
 import * as vscode from "vscode"
+
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(
     "kt3k.bwBlock",
     new BlockEdit(context),
   ))
 }
+
 class BlockEdit implements vscode.CustomTextEditorProvider {
   #uri: vscode.Uri
   static #chars = ["😸", "😹", "😺", "😻", "😼", "😽", "😾", "🙀", "😿", "🐱"]
