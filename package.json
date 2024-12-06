@@ -32,7 +32,6 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "deno -A jsr:@kt3k/pack@0.1.14 -o out/extension.js src/extension.ts --external vscode --format cjs"
   },
   "devDependencies": {
