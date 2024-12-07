@@ -1,7 +1,7 @@
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext"/>
 /// <reference lib="dom" />
-/// <reference path="../node_modules/@types/vscode-webview/index.d.ts" />
+/// <reference types="npm:@types/vscode-webview" />
 
 const vscode = acquireVsCodeApi<{ text: string }>()
 
