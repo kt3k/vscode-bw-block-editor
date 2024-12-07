@@ -6,6 +6,11 @@
   "publisher": "Yoshiya Hinosawa",
   "private": true,
   "license": "MIT",
+  "scripts": {
+    "compile": "npm run extension && npm run webview",
+    "extension": "deno -A jsr:@kt3k/pack@0.1.14 -o out/extension.js src/extension.ts --external vscode --format cjs",
+    "webview": "deno -A jsr:@kt3k/pack@0.1.14 -o out/webview.js src/webview.ts"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/kt3k/vscode-bw-block-editor"
@@ -31,8 +36,8 @@
       }
     ]
   },
-  "scripts": {
-    "compile": "deno -A jsr:@kt3k/pack@0.1.14 -o out/extension.js src/extension.ts --external vscode --format cjs"
+  "dependencies": {
+    "@types/vscode-webview": "^1.57.5"
   },
   "devDependencies": {
     "@types/vscode": "^1.73.0"

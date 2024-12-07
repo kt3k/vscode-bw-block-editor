@@ -1,14 +1,14 @@
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext"/>
 /// <reference lib="dom" />
+/// <reference path="../node_modules/@types/vscode-webview/index.d.ts" />
 
-const vscode = acquireVsCodeApi()
+const vscode = acquireVsCodeApi<{ text: string }>()
 
-const notesContainer =
-  /** @type {HTMLElement} */ (document.querySelector(".notes"))
+const notesContainer = document.querySelector<HTMLElement>(".notes")!
 
-const addButtonContainer = document.querySelector(".add-button")
-addButtonContainer.querySelector("button").addEventListener("click", () => {
+const addButtonContainer = document.querySelector(".add-button")!
+addButtonContainer.querySelector("button")!.addEventListener("click", () => {
   vscode.postMessage({
     type: "add",
   })
@@ -19,7 +19,7 @@ document.body.appendChild(errorContainer)
 errorContainer.className = "error"
 errorContainer.style.display = "none"
 
-function updateContent(/** @type {string} */ text) {
+function updateContent(/** @type {string} */ text: string) {
   let json
   try {
     if (!text) {
