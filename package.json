@@ -40,6 +40,6 @@
     "@types/vscode-webview": "^1.57.5"
   },
   "devDependencies": {
-    "@types/vscode": "^1.73.0"
+    "@types/vscode": "^1.96.0"
   }
 }
