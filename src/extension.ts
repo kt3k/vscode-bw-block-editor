@@ -1,4 +1,4 @@
-// @deno-types="@types/vscode"
+// @ts-types="@types/vscode"
 import * as vscode from "vscode"
 
 export function activate(context: vscode.ExtensionContext) {
