@@ -50,9 +50,16 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 				<script src="${scriptUri}"></script>
 			</body>
 			</html>`
+    const update = () => {
+      webview.postMessage({
+        type: "update",
+        text: document.getText(),
+        uri: document.uri.toString(),
+      })
+    }
     const subscription = vscode.workspace.onDidChangeTextDocument((e) => {
       if (e.document.uri.toString() !== document.uri.toString()) return
-      webview.postMessage({ type: "update", text: document.getText() })
+      update()
     })
     panel.onDidDispose(() => subscription.dispose())
     webview.onDidReceiveMessage((e) => {
@@ -66,7 +73,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
           return
       }
     })
-    webview.postMessage({ type: "update", text: document.getText() })
+    update()
   }
 
   #addNewScratch(document: vscode.TextDocument) {
