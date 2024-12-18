@@ -42,11 +42,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 				<link href="${styleMainUri}" rel="stylesheet" />
 			</head>
 			<body>
-				<div class="notes">
-					<div class="add-button">
-						<button>Scratch!</button>
-					</div>
-				</div>
+				<div class="notes"></div>
 				<script src="${scriptUri}"></script>
 			</body>
 			</html>`

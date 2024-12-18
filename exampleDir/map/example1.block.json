@@ -4,13 +4,15 @@
   "cells": [
     {
       "name": "0",
-      "href": "../cell/floor0.png",
-      "canEnter": true
+      "_href": "../cell/floor0.png",
+      "canEnter": true,
+      "color": "grey"
     },
     {
       "name": "1",
-      "href": "../cell/wall0.png",
-      "canEnter": false
+      "_href": "../cell/wall0.png",
+      "canEnter": false,
+      "color": "black"
     }
   ],
   "items": [],

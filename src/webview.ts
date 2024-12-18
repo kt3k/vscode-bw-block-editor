@@ -3,29 +3,37 @@
 /// <reference lib="dom" />
 /// <reference types="npm:@types/vscode-webview" />
 
+import { BlockMap, TerrainBlock } from "@kt3k/bw/models"
+
 const vscode = acquireVsCodeApi<{ text: string }>()
 
 const notesContainer = document.querySelector<HTMLElement>(".notes")!
-
-const addButtonContainer = document.querySelector(".add-button")!
-addButtonContainer.querySelector("button")!.addEventListener("click", () => {
-  vscode.postMessage({
-    type: "add",
-  })
-})
 
 const errorContainer = document.createElement("div")
 document.body.appendChild(errorContainer)
 errorContainer.className = "error"
 errorContainer.style.display = "none"
 
-function updateContent(/** @type {string} */ text: string) {
+async function updateContent(text: string) {
   let json
+  let blockMap: BlockMap
+  let terrainBlock: TerrainBlock
   try {
     if (!text) {
       text = "{}"
     }
     json = JSON.parse(text)
+    blockMap = new BlockMap("https://example.com", json)
+    terrainBlock = new TerrainBlock(
+      blockMap,
+      () => Promise.resolve(new Image()),
+    )
+    notesContainer.innerHTML = JSON.stringify(blockMap)
+    const canvas = await terrainBlock.createCanvas()
+    canvas.style.left = "0"
+    canvas.style.top = "0"
+    canvas.style.position = "relative"
+    notesContainer.appendChild(canvas)
   } catch {
     notesContainer.style.display = "none"
     errorContainer.innerText = "Error: Document is not valid json"
@@ -34,34 +42,6 @@ function updateContent(/** @type {string} */ text: string) {
   }
   notesContainer.style.display = ""
   errorContainer.style.display = "none"
-
-  notesContainer.innerHTML = ""
-  for (const note of json.scratches || []) {
-    const element = document.createElement("div")
-    element.className = "note"
-    notesContainer.appendChild(element)
-
-    const text = document.createElement("div")
-    text.className = "text"
-    const textContent = document.createElement("span")
-    textContent.innerText = note.text
-    text.appendChild(textContent)
-    element.appendChild(text)
-
-    const created = document.createElement("div")
-    created.className = "created"
-    created.innerText = new Date(note.created).toUTCString()
-    element.appendChild(created)
-
-    const deleteButton = document.createElement("button")
-    deleteButton.className = "delete-button"
-    deleteButton.addEventListener("click", () => {
-      vscode.postMessage({ type: "delete", id: note.id })
-    })
-    element.appendChild(deleteButton)
-  }
-
-  notesContainer.appendChild(addButtonContainer)
 }
 
 window.addEventListener("message", (event) => {
