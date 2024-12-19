@@ -30,7 +30,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     ))
     const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
       this.#uri,
-      "media",
+      "src",
       "style.css",
     ))
     webview.html = /* html */ `
