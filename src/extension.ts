@@ -1,5 +1,6 @@
 // @ts-types="@types/vscode"
 import * as vscode from "vscode"
+import { Buffer } from "node:buffer"
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(
@@ -58,15 +59,23 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       update()
     })
     panel.onDidDispose(() => subscription.dispose())
-    webview.onDidReceiveMessage((e) => {
+    webview.onDidReceiveMessage(async (e) => {
       switch (e.type) {
-        case "add":
+        case "add": {
           this.#addNewScratch(document)
           return
-
-        case "delete":
+        }
+        case "delete": {
           this.#deleteScratch(document, e.id)
           return
+        }
+        case "loadImage": {
+          const uri = vscode.Uri.parse(e.uri)
+          const data = await vscode.workspace.fs.readFile(uri)
+          const base64 = Buffer.from(data).toString("base64")
+          const src = `data:image/png;base64,${base64}`
+          webview.postMessage({ type: "loadImage", text: src, id: e.id })
+        }
       }
     })
     update()
