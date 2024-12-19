@@ -15,24 +15,19 @@ errorContainer.className = "error"
 errorContainer.style.display = "none"
 
 async function updateContent(text: string) {
-  let json
-  let blockMap: BlockMap
-  let terrainBlock: TerrainBlock
   try {
-    if (!text) {
-      text = "{}"
-    }
-    json = JSON.parse(text)
-    blockMap = new BlockMap("https://example.com", json)
-    terrainBlock = new TerrainBlock(
+    const blockMap = new BlockMap("https://example.com", JSON.parse(text))
+    const terrainBlock = new TerrainBlock(
       blockMap,
       () => Promise.resolve(new Image()),
     )
-    notesContainer.innerHTML = JSON.stringify(blockMap)
     const canvas = await terrainBlock.createCanvas()
-    canvas.style.left = "0"
-    canvas.style.top = "0"
-    canvas.style.position = "relative"
+    canvas.style.left = ""
+    canvas.style.top = ""
+    canvas.style.position = ""
+    notesContainer.innerHTML = `<div><pre>${
+      JSON.stringify(blockMap, null, 2)
+    }</pre></div>`
     notesContainer.appendChild(canvas)
   } catch {
     notesContainer.style.display = "none"
