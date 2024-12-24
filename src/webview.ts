@@ -5,7 +5,7 @@
 
 import { BlockMap, TerrainBlock } from "@kt3k/bw/models"
 import { WeakValueMap } from "@kt3k/weak-value-map"
-import { type Context, mount, register } from "@kt3k/cell"
+import { type Context, mount, register, Signal } from "@kt3k/cell"
 
 const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
@@ -18,12 +18,7 @@ async function updateContent(uri: string, text: string) {
   canvas.style.left = ""
   canvas.style.top = ""
   canvas.style.position = ""
-  const div = document.createElement("div")
-  div.innerHTML = `<div><div>${uri}</div><pre>${
-    JSON.stringify(blockMap, null, 2)
-  }</pre></div>`
   notesContainer.appendChild(canvas)
-  notesContainer.appendChild(div)
   notesContainer.style.display = ""
 }
 
