@@ -44,7 +44,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 			</head>
 			<body>
 				<div class="notes"></div>
-				<script src="${scriptUri}"></script>
+				<script src="${scriptUri}" type="module"></script>
 			</body>
 			</html>`
     const update = () => {

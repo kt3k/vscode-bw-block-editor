@@ -9,35 +9,20 @@ import { type Context, mount, register, Signal } from "@kt3k/cell"
 
 const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
-const notesContainer = document.querySelector<HTMLElement>(".notes")!
+const terrainBlock = new Signal<TerrainBlock | null>(null)
 
-async function updateContent(uri: string, text: string) {
-  const blockMap = new BlockMap(uri, JSON.parse(text))
-  const terrainBlock = new TerrainBlock(blockMap, loadImage)
-  const canvas = await terrainBlock.createCanvas()
-  canvas.style.left = ""
-  canvas.style.top = ""
-  canvas.style.position = ""
-  notesContainer.appendChild(canvas)
-  notesContainer.style.display = ""
+function Notes({ subscribe, el }: Context) {
+  subscribe(terrainBlock, async (terrainBlock) => {
+    if (terrainBlock === null) return
+    const canvas = await terrainBlock.createCanvas()
+    canvas.style.left = ""
+    canvas.style.top = ""
+    canvas.style.position = ""
+    el.appendChild(canvas)
+  })
 }
 
-window.addEventListener("message", (event) => {
-  const message = event.data // The json data that the extension sent
-  switch (message.type) {
-    case "update": {
-      const { uri, text } = message
-      updateContent(uri, text)
-      vscode.setState({ uri, text })
-      return
-    }
-    case "loadImage": {
-      const image = new Image()
-      image.src = message.text
-      loadImageMap[message.id].resolve(image)
-    }
-  }
-})
+register(Notes, "notes")
 
 function loadImage_(uri: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
@@ -77,7 +62,26 @@ const loadImageMap: Record<
   { resolve: (image: HTMLImageElement) => void }
 > = {}
 
+window.addEventListener("message", (event) => {
+  const message = event.data // The json data that the extension sent
+  switch (message.type) {
+    case "update": {
+      const { uri, text } = message
+      const blockMap = new BlockMap(uri, JSON.parse(text))
+      terrainBlock.update(new TerrainBlock(blockMap, loadImage))
+      vscode.setState({ uri, text })
+      return
+    }
+    case "loadImage": {
+      const image = new Image()
+      image.src = message.text
+      loadImageMap[message.id].resolve(image)
+    }
+  }
+})
+
 const state = vscode.getState()
 if (state) {
-  updateContent(state.uri, state.text)
+  const blockMap = new BlockMap(state.uri, JSON.parse(state.text))
+  terrainBlock.update(new TerrainBlock(blockMap, loadImage))
 }
