@@ -4,12 +4,25 @@
 /// <reference types="npm:@types/vscode-webview" />
 
 import { BlockMap, TerrainBlock } from "@kt3k/bw/models"
+import { floorN } from "@kt3k/bw/util/math"
+import { CanvasLayer } from "@kt3k/bw/util/canvas-layer"
 import { WeakValueMap } from "@kt3k/weak-value-map"
-import { type Context, mount, register, Signal } from "@kt3k/cell"
+import { type Context, GroupSignal, mount, register, Signal } from "@kt3k/cell"
 
 const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
+const blockMapSource = new GroupSignal({ uri: "", text: "" })
 const terrainBlock = new Signal<TerrainBlock | null>(null)
+
+blockMapSource.subscribe(({ uri, text }) => {
+  if (uri === "" || text === "") {
+    terrainBlock.update(null)
+    return
+  }
+  terrainBlock.update(
+    new TerrainBlock(new BlockMap(uri, JSON.parse(text)), loadImage),
+  )
+})
 
 function Notes({ subscribe, el }: Context) {
   subscribe(terrainBlock, async (terrainBlock) => {
@@ -18,11 +31,28 @@ function Notes({ subscribe, el }: Context) {
     canvas.style.left = ""
     canvas.style.top = ""
     canvas.style.position = ""
+    canvas.classList.add("terrain-block")
+    el.innerHTML = ""
     el.appendChild(canvas)
+    mount()
+  })
+}
+
+function Block({ on, el }: Context<HTMLCanvasElement>) {
+  const canvasLayer = new CanvasLayer(el)
+  on("click", (e) => {
+    const { left, top } = el.getBoundingClientRect()
+    const x = floorN(e.clientX - left, 16)
+    const y = floorN(e.clientY - top, 16)
+    const i = x / 16
+    const j = y / 16
+    canvasLayer.ctx.clearRect(x, y, 16, 16)
+    canvasLayer.drawRect(x, y, 16, 16, "rgba(255, 0, 0, 0.5)")
   })
 }
 
 register(Notes, "notes")
+register(Block, "terrain-block")
 
 function loadImage_(uri: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
@@ -67,8 +97,7 @@ window.addEventListener("message", (event) => {
   switch (message.type) {
     case "update": {
       const { uri, text } = message
-      const blockMap = new BlockMap(uri, JSON.parse(text))
-      terrainBlock.update(new TerrainBlock(blockMap, loadImage))
+      blockMapSource.update({ uri, text })
       vscode.setState({ uri, text })
       return
     }
@@ -82,6 +111,5 @@ window.addEventListener("message", (event) => {
 
 const state = vscode.getState()
 if (state) {
-  const blockMap = new BlockMap(state.uri, JSON.parse(state.text))
-  terrainBlock.update(new TerrainBlock(blockMap, loadImage))
+  blockMapSource.update(state)
 }
