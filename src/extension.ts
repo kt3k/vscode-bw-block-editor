@@ -43,10 +43,11 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 				<link href="${styleMainUri}" rel="stylesheet" />
 			</head>
 			<body>
-				<div class="notes"></div>
+				<div class="main-container"></div>
 				<script src="${scriptUri}" type="module"></script>
 			</body>
 			</html>`
+
     const update = () => {
       webview.postMessage({
         type: "update",
@@ -62,11 +63,11 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     webview.onDidReceiveMessage(async (e) => {
       switch (e.type) {
         case "add": {
-          this.#addNewScratch(document)
+          this.#addNew(document)
           return
         }
         case "delete": {
-          this.#deleteScratch(document, e.id)
+          this.#delete(document, e.id)
           return
         }
         case "loadImage": {
@@ -75,13 +76,14 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
           const base64 = Buffer.from(data).toString("base64")
           const src = `data:image/png;base64,${base64}`
           webview.postMessage({ type: "loadImage", text: src, id: e.id })
+          return
         }
       }
     })
     update()
   }
 
-  #addNewScratch(document: vscode.TextDocument) {
+  #addNew(document: vscode.TextDocument) {
     const json = JSON.parse(document.getText())
     const chars = BlockEdit.#chars
     const c = chars[Math.floor(Math.random() * chars.length)]
@@ -89,19 +91,19 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       ...(Array.isArray(json.scratches) ? json.scratches : []),
       { id: crypto.randomUUID(), text: c, created: Date.now() },
     ]
-    return this.#updateTextDocument(document, json)
+    return this.#update(document, json)
   }
 
-  #deleteScratch(document: vscode.TextDocument, id: string) {
+  #delete(document: vscode.TextDocument, id: string) {
     const json = JSON.parse(document.getText())
     if (!Array.isArray(json.scratches)) {
       return
     }
     json.scratches = json.scratches.filter((note: any) => note.id !== id)
-    return this.#updateTextDocument(document, json)
+    return this.#update(document, json)
   }
 
-  #updateTextDocument(document: vscode.TextDocument, json: any) {
+  #update(document: vscode.TextDocument, json: any) {
     const edit = new vscode.WorkspaceEdit()
     edit.replace(
       document.uri,

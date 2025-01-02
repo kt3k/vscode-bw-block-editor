@@ -24,22 +24,23 @@ blockMapSource.subscribe(({ uri, text }) => {
   )
 })
 
-function Notes({ subscribe, el }: Context) {
+function MainContainer({ subscribe, el }: Context) {
   subscribe(terrainBlock, async (terrainBlock) => {
     if (terrainBlock === null) return
     const canvas = await terrainBlock.createCanvas()
     canvas.style.left = ""
     canvas.style.top = ""
     canvas.style.position = ""
-    canvas.classList.add("terrain-block")
+    canvas.classList.add("terrain-block-canvas")
     el.innerHTML = ""
     el.appendChild(canvas)
-    mount()
+    mount("terrain-block-canvas", el)
   })
 }
 
-function Block({ on, el }: Context<HTMLCanvasElement>) {
+function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
   const canvasLayer = new CanvasLayer(el)
+
   on("click", (e) => {
     const { left, top } = el.getBoundingClientRect()
     const x = floorN(e.clientX - left, 16)
@@ -51,8 +52,8 @@ function Block({ on, el }: Context<HTMLCanvasElement>) {
   })
 }
 
-register(Notes, "notes")
-register(Block, "terrain-block")
+register(MainContainer, "main-container")
+register(TerrainBlockCanvas, "terrain-block-canvas")
 
 function loadImage_(uri: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
