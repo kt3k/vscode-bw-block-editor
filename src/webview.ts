@@ -38,6 +38,33 @@ function MainContainer({ subscribe, el }: Context) {
   })
 }
 
+function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
+  subscribe(terrainBlock, async (terrainBlock) => {
+    if (terrainBlock === null) return
+    const cells = await Promise.all(terrainBlock.cells.map(async (cell) => {
+      const canvas = document.createElement("canvas")
+      canvas.width = 16
+      canvas.height = 16
+      canvas.style.display = "inline-block"
+      canvas.style.border = "1px solid black"
+      if (cell.color) {
+        canvas.style.backgroundColor = cell.color
+      }
+      if (cell.href) {
+        const img = await loadImage(cell.href)
+        const ctx = canvas.getContext("2d")!
+        ctx.drawImage(img, 0, 0, 16, 16)
+      }
+      return canvas
+    }))
+    el.innerHTML = ""
+    cells.forEach((cell) => el.appendChild(cell))
+  })
+  on("click", (e) => {
+    const canvas = e.target! as HTMLCanvasElement
+  })
+}
+
 function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
   const canvasLayer = new CanvasLayer(el)
 
@@ -54,6 +81,7 @@ function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
 
 register(MainContainer, "main-container")
 register(TerrainBlockCanvas, "terrain-block-canvas")
+register(TerrainBlockCellsContainer, "terrain-block-cells")
 
 function loadImage_(uri: string): Promise<HTMLImageElement> {
   return new Promise((resolve) => {

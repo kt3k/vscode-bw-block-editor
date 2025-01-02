@@ -43,6 +43,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
 				<link href="${styleMainUri}" rel="stylesheet" />
 			</head>
 			<body>
+        <div class="terrain-block-cells"></div>
 				<div class="main-container"></div>
 				<script src="${scriptUri}" type="module"></script>
 			</body>
