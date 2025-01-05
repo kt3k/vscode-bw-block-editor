@@ -7,9 +7,10 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "compile": "npm run extension && npm run webview",
+    "compile": "npm run extension && npm run webview && npm run webview-style",
     "extension": "deno -A jsr:@kt3k/pack@0.1.14 -o out/extension.js src/extension.ts --external vscode --format cjs",
-    "webview": "deno -A jsr:@kt3k/pack@0.1.14 -o out/webview.js src/webview.ts"
+    "webview": "deno -A jsr:@kt3k/pack@0.1.14 -o out/webview.js src/webview.ts",
+    "webview-style": "deno -A npm:tailwindcss -o src/style.css"
   },
   "repository": {
     "type": "git",
