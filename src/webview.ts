@@ -13,6 +13,7 @@ const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
 const blockMapSource = new GroupSignal({ uri: "", text: "" })
 const terrainBlock = new Signal<TerrainBlock | null>(null)
+const selectedCell = new Signal<number | null>(null)
 
 blockMapSource.subscribe(({ uri, text }) => {
   if (uri === "" || text === "") {
@@ -45,8 +46,7 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
       const canvas = document.createElement("canvas")
       canvas.width = 16
       canvas.height = 16
-      canvas.style.display = "inline-block"
-      canvas.style.border = "1px solid black"
+      canvas.classList.add("border", "inline-block", "m-2")
       if (cell.color) {
         canvas.style.backgroundColor = cell.color
       }
@@ -59,9 +59,25 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
     }))
     el.innerHTML = ""
     cells.forEach((cell) => el.appendChild(cell))
+    if (cells.length > 0) {
+      selectedCell.update(0)
+    }
+  })
+  subscribe(selectedCell, (index) => {
+    const children = Array.from(el.children)
+    children.forEach((child, i) => {
+      if (i === index) {
+        child.classList.add("border-white")
+        child.classList.remove("border-black")
+      } else {
+        child.classList.add("border-black")
+        child.classList.remove("border-white")
+      }
+    })
   })
   on("click", (e) => {
-    const canvas = e.target! as HTMLCanvasElement
+    const index = Array.from(el.children).indexOf(e.target as HTMLElement)
+    if (index >= 0) selectedCell.update(index)
   })
 }
 
