@@ -35,19 +35,26 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       "style.css",
     ))
     webview.html = /* html */ `
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<link href="${styleMainUri}" rel="stylesheet" />
-			</head>
-			<body>
-        <div class="terrain-block-cells"></div>
-				<div class="main-container"></div>
-				<script src="${scriptUri}" type="module"></script>
-			</body>
-			</html>`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <link href="${styleMainUri}" rel="stylesheet" />
+          <style>
+            canvas {
+              image-rendering: crisp-edges;
+              image-rendering: pixelated
+            }
+          </style>
+        </head>
+        <body>
+          <div class="terrain-block-cells"></div>
+          <div class="main-container"></div>
+          <script src="${scriptUri}" type="module"></script>
+        </body>
+      </html>
+    `
 
     const update = () => {
       webview.postMessage({
