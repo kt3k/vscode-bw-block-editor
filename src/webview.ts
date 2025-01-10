@@ -13,6 +13,7 @@ const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
 const blockMapSource = new GroupSignal({ uri: "", text: "" })
 const terrainBlock = new Signal<TerrainBlock | null>(null)
+let prevTerrainBlock: TerrainBlock | null = null
 const selectedCell = new Signal<number | null>(null)
 
 blockMapSource.subscribe(({ uri, text }) => {
@@ -27,15 +28,23 @@ blockMapSource.subscribe(({ uri, text }) => {
 
 function MainContainer({ subscribe, el }: Context) {
   subscribe(terrainBlock, async (terrainBlock) => {
+    const prev = prevTerrainBlock
+    prevTerrainBlock = terrainBlock
     if (terrainBlock === null) return
-    const canvas = await terrainBlock.createCanvas()
-    canvas.style.left = ""
-    canvas.style.top = ""
-    canvas.style.position = ""
-    canvas.classList.add("terrain-block-canvas")
-    el.innerHTML = ""
-    el.appendChild(canvas)
-    mount("terrain-block-canvas", el)
+
+    if (prev === null) {
+      const canvas = await terrainBlock.createCanvas()
+      canvas.style.left = ""
+      canvas.style.top = ""
+      canvas.style.position = ""
+      canvas.classList.add("terrain-block-canvas")
+      el.innerHTML = ""
+      el.appendChild(canvas)
+      mount("terrain-block-canvas", el)
+      return
+    }
+
+    // TODO(kt3k): compute diff, and apply diff
   })
 }
 
@@ -84,14 +93,21 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
 function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
   const canvasLayer = new CanvasLayer(el)
 
-  on("click", (e) => {
+  on("click", async (e) => {
     const { left, top } = el.getBoundingClientRect()
     const x = floorN(e.clientX - left, 16)
     const y = floorN(e.clientY - top, 16)
     const i = x / 16
     const j = y / 16
+    const block = terrainBlock.get()
+    if (block === null) return
+    const cell = block.cells[selectedCell.get()!]
     canvasLayer.ctx.clearRect(x, y, 16, 16)
-    canvasLayer.drawRect(x, y, 16, 16, "rgba(255, 0, 0, 0.5)")
+    if (cell.href) {
+      canvasLayer.ctx.drawImage(await loadImage(cell.href), x, y, 16, 16)
+    } else {
+      canvasLayer.drawRect(x, y, 16, 16, cell.color || "black")
+    }
   })
 }
 
