@@ -14,7 +14,7 @@
     "semiColons": false
   },
   "imports": {
-    "@kt3k/bw": "jsr:@kt3k/bw@^0.1.7",
+    "@kt3k/bw": "jsr:@kt3k/bw@^0.1.10",
     "@kt3k/cell": "jsr:@kt3k/cell@^0.7.6",
     "@kt3k/weak-value-map": "jsr:@kt3k/weak-value-map@^0.1.2",
     "vscode": "./empty.ts"

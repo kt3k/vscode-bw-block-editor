@@ -108,6 +108,9 @@ function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
     } else {
       canvasLayer.drawRect(x, y, 16, 16, cell.color || "black")
     }
+    const b = terrainBlock.get()!.clone()
+    b.update(i, j, cell.name)
+    terrainBlock.update(b)
   })
 }
 
@@ -166,6 +169,7 @@ window.addEventListener("message", (event) => {
       const image = new Image()
       image.src = message.text
       loadImageMap[message.id].resolve(image)
+      return
     }
   }
 })
