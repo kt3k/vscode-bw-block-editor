@@ -1,6 +1,7 @@
 // @ts-types="@types/vscode"
 import * as vscode from "vscode"
 import { Buffer } from "node:buffer"
+import type { ExtensionMessage, WebviewMessage } from "./types.ts"
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(
@@ -56,8 +57,11 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       </html>
     `
 
+    const postMessage = (message: ExtensionMessage) =>
+      webview.postMessage(message)
+
     const update = () => {
-      webview.postMessage({
+      postMessage({
         type: "update",
         text: document.getText(),
         uri: document.uri.toString(),
@@ -68,22 +72,14 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       update()
     })
     panel.onDidDispose(() => subscription.dispose())
-    webview.onDidReceiveMessage(async (e) => {
+    webview.onDidReceiveMessage(async (e: WebviewMessage) => {
       switch (e.type) {
-        case "add": {
-          this.#addNew(document)
-          return
-        }
-        case "delete": {
-          this.#delete(document, e.id)
-          return
-        }
         case "loadImage": {
           const uri = vscode.Uri.parse(e.uri)
           const data = await vscode.workspace.fs.readFile(uri)
           const base64 = Buffer.from(data).toString("base64")
           const src = `data:image/png;base64,${base64}`
-          webview.postMessage({ type: "loadImage", text: src, id: e.id })
+          postMessage({ type: "loadImageResponse", text: src, id: e.id })
           return
         }
       }

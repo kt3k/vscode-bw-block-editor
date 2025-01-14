@@ -5,9 +5,10 @@
 
 import { BlockMap, TerrainBlock } from "@kt3k/bw/models"
 import { floorN } from "@kt3k/bw/util/math"
+import { memoizedLoading } from "@kt3k/bw/util/memo"
 import { CanvasLayer } from "@kt3k/bw/util/canvas-layer"
-import { WeakValueMap } from "@kt3k/weak-value-map"
 import { type Context, GroupSignal, mount, register, Signal } from "@kt3k/cell"
+import type { ExtensionMessage } from "./types.ts"
 
 const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
@@ -126,29 +127,6 @@ function loadImage_(uri: string): Promise<HTMLImageElement> {
   })
 }
 
-function memoizedLoading<K, A extends WeakKey>(
-  fn: (key: K) => Promise<A>,
-): (key: K) => Promise<A> {
-  const weakValueMap = new WeakValueMap<K, Promise<A>>()
-  const weakKeyMap = new WeakMap<A, Promise<A>>()
-  return (key: K) => {
-    const cache = weakValueMap.get(key)
-    if (cache) {
-      return cache
-    }
-    const promise = fn(key)
-    // Cache the promise by the key
-    weakValueMap.set(key, promise)
-    promise.then((value) => {
-      // Create a weak map from the asest to the loading promise.
-      // This prevents the promise from being garbage collected
-      // as long as the asset is being used
-      weakKeyMap.set(value, promise)
-    })
-    return promise
-  }
-}
-
 const loadImage = memoizedLoading(loadImage_)
 
 const loadImageMap: Record<
@@ -156,7 +134,7 @@ const loadImageMap: Record<
   { resolve: (image: HTMLImageElement) => void }
 > = {}
 
-window.addEventListener("message", (event) => {
+window.addEventListener("message", (event: MessageEvent<ExtensionMessage>) => {
   const message = event.data // The json data that the extension sent
   switch (message.type) {
     case "update": {
@@ -165,7 +143,7 @@ window.addEventListener("message", (event) => {
       vscode.setState({ uri, text })
       return
     }
-    case "loadImage": {
+    case "loadImageResponse": {
       const image = new Image()
       image.src = message.text
       loadImageMap[message.id].resolve(image)
