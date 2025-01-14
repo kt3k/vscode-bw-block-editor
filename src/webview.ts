@@ -53,10 +53,17 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
   subscribe(terrainBlock, async (terrainBlock) => {
     if (terrainBlock === null) return
     const cells = await Promise.all(terrainBlock.cells.map(async (cell) => {
-      const canvas = document.createElement("canvas")
+      let canvas = el.querySelector<HTMLCanvasElement>(
+        'canvas[name="' + cell.name + '"]',
+      )
+      if (canvas) {
+        return canvas
+      }
+      canvas = document.createElement("canvas")
       canvas.width = 16
       canvas.height = 16
       canvas.classList.add("border", "inline-block", "m-2")
+      canvas.setAttribute("name", cell.name)
       if (cell.color) {
         canvas.style.backgroundColor = cell.color
       }
@@ -65,11 +72,9 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
         const ctx = canvas.getContext("2d")!
         ctx.drawImage(img, 0, 0, 16, 16)
       }
-      return canvas
+      el.appendChild(canvas)
     }))
-    el.innerHTML = ""
-    cells.forEach((cell) => el.appendChild(cell))
-    if (cells.length > 0) {
+    if (cells.length > 0 && selectedCell.get() === null) {
       selectedCell.update(0)
     }
   })
@@ -87,7 +92,9 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
   })
   on("click", (e) => {
     const index = Array.from(el.children).indexOf(e.target as HTMLElement)
-    if (index >= 0) selectedCell.update(index)
+    if (index >= 0) {
+      selectedCell.update(index)
+    }
   })
 }
 
