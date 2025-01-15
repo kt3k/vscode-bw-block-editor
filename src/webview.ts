@@ -62,7 +62,7 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
       canvas = document.createElement("canvas")
       canvas.width = 16
       canvas.height = 16
-      canvas.classList.add("border", "inline-block", "m-2")
+      canvas.classList.add("border", "inline-block", "m-2", "shadow")
       canvas.setAttribute("name", cell.name)
       if (cell.color) {
         canvas.style.backgroundColor = cell.color
@@ -72,21 +72,25 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
         const ctx = canvas.getContext("2d")!
         ctx.drawImage(img, 0, 0, 16, 16)
       }
-      el.appendChild(canvas)
+      return canvas
     }))
+    cells.forEach((cell) => {
+      if (!el.contains(cell)) {
+        el.appendChild(cell)
+      }
+    })
     if (cells.length > 0 && selectedCell.get() === null) {
       selectedCell.update(0)
     }
   })
   subscribe(selectedCell, (index) => {
     const children = Array.from(el.children)
+    const ACTIVE_CLASSES = ["shadow", "shadow-orange-500"]
     children.forEach((child, i) => {
       if (i === index) {
-        child.classList.add("border-white")
-        child.classList.remove("border-black")
+        child.classList.add(...ACTIVE_CLASSES)
       } else {
-        child.classList.add("border-black")
-        child.classList.remove("border-white")
+        child.classList.remove(...ACTIVE_CLASSES)
       }
     })
   })
