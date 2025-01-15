@@ -53,17 +53,19 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
   subscribe(terrainBlock, async (terrainBlock) => {
     if (terrainBlock === null) return
     const cells = await Promise.all(terrainBlock.cells.map(async (cell) => {
-      let canvas = el.querySelector<HTMLCanvasElement>(
-        'canvas[name="' + cell.name + '"]',
+      let div = el.querySelector<HTMLDivElement>(
+        '[name="' + cell.name + '"]',
       )
-      if (canvas) {
-        return canvas
+      if (div) {
+        return div
       }
-      canvas = document.createElement("canvas")
+      div = document.createElement("div")
+      div.classList.add("inline-block", "p-1", "m-1", "rounded")
+      div.setAttribute("name", cell.name)
+      const canvas = document.createElement("canvas")
       canvas.width = 16
       canvas.height = 16
-      canvas.classList.add("border", "inline-block", "m-2", "shadow")
-      canvas.setAttribute("name", cell.name)
+      canvas.classList.add("pointer-events-none")
       if (cell.color) {
         canvas.style.backgroundColor = cell.color
       }
@@ -72,7 +74,8 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
         const ctx = canvas.getContext("2d")!
         ctx.drawImage(img, 0, 0, 16, 16)
       }
-      return canvas
+      div.appendChild(canvas)
+      return div
     }))
     cells.forEach((cell) => {
       if (!el.contains(cell)) {
@@ -85,12 +88,14 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
   })
   subscribe(selectedCell, (index) => {
     const children = Array.from(el.children)
-    const ACTIVE_CLASSES = ["shadow", "shadow-orange-500"]
+    const ACTIVE_CLASSES = ["bg-orange-400"]
     children.forEach((child, i) => {
       if (i === index) {
         child.classList.add(...ACTIVE_CLASSES)
+        child.firstChild!.classList.add("opacity-80")
       } else {
         child.classList.remove(...ACTIVE_CLASSES)
+        child.firstChild!.classList.remove("opacity-80")
       }
     })
   })
