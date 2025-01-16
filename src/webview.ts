@@ -8,7 +8,11 @@ import { floorN } from "@kt3k/bw/util/math"
 import { memoizedLoading } from "@kt3k/bw/util/memo"
 import { CanvasLayer } from "@kt3k/bw/util/canvas-layer"
 import { type Context, GroupSignal, mount, register, Signal } from "@kt3k/cell"
-import type { ExtensionMessage } from "./types.ts"
+import type {
+  ExtensionMessage,
+  ExtensionMessageLoadImageResponse,
+  ExtensionMessageUpdate,
+} from "./types.ts"
 
 const vscode = acquireVsCodeApi<{ uri: string; text: string }>()
 
@@ -49,7 +53,7 @@ function MainContainer({ subscribe, el }: Context) {
   })
 }
 
-function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
+function CellSwitch({ on, el, subscribe }: Context) {
   subscribe(terrainBlock, async (terrainBlock) => {
     if (terrainBlock === null) return
     const cells = await Promise.all(terrainBlock.cells.map(async (cell) => {
@@ -132,10 +136,6 @@ function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
   })
 }
 
-register(MainContainer, "main-container")
-register(TerrainBlockCanvas, "terrain-block-canvas")
-register(TerrainBlockCellsContainer, "terrain-block-cells")
-
 const loadImage = memoizedLoading((uri: string) => {
   const { resolve, promise } = Promise.withResolvers<HTMLImageElement>()
   const id = Math.random().toString()
@@ -147,21 +147,24 @@ const loadImage = memoizedLoading((uri: string) => {
 type ResolveImage = (image: HTMLImageElement) => void
 const loadImageMap: Record<string, { resolve: ResolveImage }> = {}
 
+function onUpdate(message: ExtensionMessageUpdate) {
+  const { uri, text } = message
+  blockMapSource.update({ uri, text })
+  vscode.setState({ uri, text })
+}
+
+function onLoadImageResponse(message: ExtensionMessageLoadImageResponse) {
+  const image = new Image()
+  image.src = message.text
+  loadImageMap[message.id].resolve(image)
+}
+
 window.addEventListener("message", (event: MessageEvent<ExtensionMessage>) => {
-  const message = event.data // The json data that the extension sent
-  switch (message.type) {
-    case "update": {
-      const { uri, text } = message
-      blockMapSource.update({ uri, text })
-      vscode.setState({ uri, text })
-      return
-    }
-    case "loadImageResponse": {
-      const image = new Image()
-      image.src = message.text
-      loadImageMap[message.id].resolve(image)
-      return
-    }
+  const { data } = event
+  if (data.type === "update") {
+    onUpdate(data)
+  } else if (data.type === "loadImageResponse") {
+    onLoadImageResponse(data)
   }
 })
 
@@ -169,3 +172,7 @@ const state = vscode.getState()
 if (state) {
   blockMapSource.update(state)
 }
+
+register(MainContainer, "main-container")
+register(TerrainBlockCanvas, "terrain-block-canvas")
+register(CellSwitch, "cell-switch")
