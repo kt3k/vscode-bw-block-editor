@@ -14,7 +14,7 @@
     "semiColons": false
   },
   "imports": {
-    "@kt3k/bw": "jsr:@kt3k/bw@^0.1.11",
+    "@kt3k/bw": "jsr:@kt3k/bw@^0.1.12",
     "@kt3k/cell": "jsr:@kt3k/cell@^0.7.6",
     "vscode": "./empty.ts"
   }

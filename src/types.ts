@@ -17,4 +17,8 @@ export type WebviewMessageLoadImage = {
   id: string
   uri: string
 }
-export type WebviewMessage = WebviewMessageLoadImage
+export type WebviewMessageUpdate = {
+  type: "update"
+  map: any
+}
+export type WebviewMessage = WebviewMessageLoadImage | WebviewMessageUpdate

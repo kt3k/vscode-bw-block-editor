@@ -133,6 +133,11 @@ function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
     const b = terrainBlock.get()!.clone()
     b.update(i, j, cell.name)
     terrainBlock.update(b)
+    const map = b.toMap()
+    vscode.postMessage({
+      type: "update",
+      map: map.toObject(),
+    })
   })
 }
 

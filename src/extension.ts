@@ -74,15 +74,14 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
     })
     panel.onDidDispose(() => subscription.dispose())
     webview.onDidReceiveMessage(async (e: WebviewMessage) => {
-      switch (e.type) {
-        case "loadImage": {
-          const uri = vscode.Uri.parse(e.uri)
-          const data = await vscode.workspace.fs.readFile(uri)
-          const base64 = Buffer.from(data).toString("base64")
-          const src = `data:image/png;base64,${base64}`
-          postMessage({ type: "loadImageResponse", text: src, id: e.id })
-          return
-        }
+      if (e.type === "loadImage") {
+        const uri = vscode.Uri.parse(e.uri)
+        const data = await vscode.workspace.fs.readFile(uri)
+        const base64 = Buffer.from(data).toString("base64")
+        const src = `data:image/png;base64,${base64}`
+        postMessage({ type: "loadImageResponse", text: src, id: e.id })
+      } else if (e.type === "update") {
+        this.#update(document, e.map)
       }
     })
     update()
