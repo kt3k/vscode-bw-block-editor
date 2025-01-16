@@ -89,13 +89,14 @@ function TerrainBlockCellsContainer({ on, el, subscribe }: Context) {
   subscribe(selectedCell, (index) => {
     const children = Array.from(el.children)
     const ACTIVE_CLASSES = ["bg-orange-400"]
+    const ACTIVE_CANVAS_CLASSES = ["opacity-70"]
     children.forEach((child, i) => {
       if (i === index) {
         child.classList.add(...ACTIVE_CLASSES)
-        child.firstChild!.classList.add("opacity-80")
+        ;(child.firstChild as any).classList.add(...ACTIVE_CANVAS_CLASSES)
       } else {
         child.classList.remove(...ACTIVE_CLASSES)
-        child.firstChild!.classList.remove("opacity-80")
+        ;(child.firstChild as any).classList.remove(...ACTIVE_CANVAS_CLASSES)
       }
     })
   })
@@ -121,7 +122,7 @@ function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
     const cell = block.cells[selectedCell.get()!]
     canvasLayer.ctx.clearRect(x, y, 16, 16)
     if (cell.href) {
-      canvasLayer.ctx.drawImage(await loadImage(cell.href), x, y, 16, 16)
+      canvasLayer.drawImage(await loadImage(cell.href), x, y)
     } else {
       canvasLayer.drawRect(x, y, 16, 16, cell.color || "black")
     }
@@ -135,20 +136,16 @@ register(MainContainer, "main-container")
 register(TerrainBlockCanvas, "terrain-block-canvas")
 register(TerrainBlockCellsContainer, "terrain-block-cells")
 
-function loadImage_(uri: string): Promise<HTMLImageElement> {
-  return new Promise((resolve) => {
-    const id = Math.random().toString()
-    loadImageMap[id] = { resolve }
-    vscode.postMessage({ type: "loadImage", uri, id })
-  })
-}
+const loadImage = memoizedLoading((uri: string) => {
+  const { resolve, promise } = Promise.withResolvers<HTMLImageElement>()
+  const id = Math.random().toString()
+  loadImageMap[id] = { resolve }
+  vscode.postMessage({ type: "loadImage", uri, id })
+  return promise
+})
 
-const loadImage = memoizedLoading(loadImage_)
-
-const loadImageMap: Record<
-  string,
-  { resolve: (image: HTMLImageElement) => void }
-> = {}
+type ResolveImage = (image: HTMLImageElement) => void
+const loadImageMap: Record<string, { resolve: ResolveImage }> = {}
 
 window.addEventListener("message", (event: MessageEvent<ExtensionMessage>) => {
   const message = event.data // The json data that the extension sent
