@@ -74,7 +74,7 @@ function CellSwitch({ on, el, subscribe }: Context) {
         canvas.style.backgroundColor = cell.color
       }
       if (cell.href) {
-        const img = await loadImage(cell.href)
+        const img = await terrainBlock.loadCellImage(cell.href)
         const ctx = canvas.getContext("2d")!
         ctx.drawImage(img, 0, 0, 16, 16)
       }
@@ -126,7 +126,7 @@ function TerrainBlockCanvas({ on, el }: Context<HTMLCanvasElement>) {
     const cell = block.cells[selectedCell.get()!]
     canvasLayer.ctx.clearRect(x, y, 16, 16)
     if (cell.href) {
-      canvasLayer.drawImage(await loadImage(cell.href), x, y)
+      canvasLayer.drawImage(await block.loadCellImage(cell.href), x, y)
     } else {
       canvasLayer.drawRect(x, y, 16, 16, cell.color || "black")
     }
