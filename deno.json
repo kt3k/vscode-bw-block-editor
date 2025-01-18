@@ -1,5 +1,12 @@
 {
   "lock": false,
+  "tasks": {
+    "compile": "deno task extension && deno task webview && deno task webview-style",
+    "extension": "deno -A jsr:@kt3k/pack@0.1.14 -o out/extension.js src/extension.ts --external vscode --format cjs",
+    "webview": "deno -A jsr:@kt3k/pack@0.1.14 -o out/webview.js src/webview.ts",
+    "webview-style": "deno -A npm:tailwindcss -o src/style.css",
+    "package": "deno -A --unstable-unsafe-proto npm:vsce package"
+  },
   "lint": {
     "rules": {
       "exclude": [
