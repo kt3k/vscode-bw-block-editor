@@ -9,54 +9,18 @@ import type {
 } from "./types.ts"
 
 export function activate(context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.window.registerCustomEditorProvider(
+  const subscription = vscode.window.registerCustomEditorProvider(
     "kt3k.bwBlock",
-    new BlockEdit(context),
-  ))
+    {
+      resolveCustomTextEditor(document, panel, _) {
+        new BlockEditor(context.extensionUri, document, panel)
+      },
+    } satisfies vscode.CustomTextEditorProvider,
+  )
+  context.subscriptions.push(subscription)
 }
 
-class BlockEdit implements vscode.CustomTextEditorProvider {
-  #uri: vscode.Uri
-
-  constructor(context: vscode.ExtensionContext) {
-    this.#uri = context.extensionUri
-  }
-
-  async resolveCustomTextEditor(
-    document: vscode.TextDocument,
-    panel: vscode.WebviewPanel,
-    _token: vscode.CancellationToken,
-  ): Promise<void> {
-    const webview = new CustomWebview(this.#uri, document, panel)
-    webview.onDidReceiveMessage(async (e: WebviewMessage) => {
-      if (e.type === "loadImage") {
-        this.#loadImage(e, webview)
-      } else if (e.type === "update") {
-        this.#update(document, e)
-      }
-    })
-  }
-
-  #update(document: vscode.TextDocument, e: WebviewMessageUpdate) {
-    const edit = new vscode.WorkspaceEdit()
-    edit.replace(
-      document.uri,
-      new vscode.Range(0, 0, document.lineCount, 0),
-      JSON.stringify(e.map, null, 2),
-    )
-    vscode.workspace.applyEdit(edit)
-  }
-
-  async #loadImage(e: WebviewMessageLoadImage, webview: CustomWebview) {
-    const uri = vscode.Uri.parse(e.uri)
-    const data = await vscode.workspace.fs.readFile(uri)
-    const base64 = Buffer.from(data).toString("base64")
-    const src = `data:image/png;base64,${base64}`
-    webview.postMessage({ type: "loadImageResponse", text: src, id: e.id })
-  }
-}
-
-class CustomWebview {
+class BlockEditor {
   #webview: vscode.Webview
   #document: vscode.TextDocument
 
@@ -101,22 +65,43 @@ class CustomWebview {
       this.#updateWebview()
     })
     panel.onDidDispose(() => subscription.dispose())
+    webview.onDidReceiveMessage((e: WebviewMessage) => {
+      if (e.type === "loadImage") {
+        this.#loadImage(e)
+      } else if (e.type === "update") {
+        this.#update(e)
+      }
+    })
     this.#updateWebview()
   }
 
-  postMessage(message: ExtensionMessage) {
+  #postMessage(message: ExtensionMessage) {
     this.#webview.postMessage(message)
   }
 
   #updateWebview() {
-    this.postMessage({
+    this.#postMessage({
       type: "update",
       text: this.#document.getText(),
       uri: this.#document.uri.toString(),
     })
   }
 
-  onDidReceiveMessage(listener: (e: WebviewMessage) => void) {
-    this.#webview.onDidReceiveMessage(listener)
+  #update(e: WebviewMessageUpdate) {
+    const edit = new vscode.WorkspaceEdit()
+    edit.replace(
+      this.#document.uri,
+      new vscode.Range(0, 0, this.#document.lineCount, 0),
+      JSON.stringify(e.map, null, 2),
+    )
+    vscode.workspace.applyEdit(edit)
+  }
+
+  async #loadImage(e: WebviewMessageLoadImage) {
+    const uri = vscode.Uri.parse(e.uri)
+    const data = await vscode.workspace.fs.readFile(uri)
+    const base64 = Buffer.from(data).toString("base64")
+    const src = `data:image/png;base64,${base64}`
+    this.#postMessage({ type: "loadImageResponse", text: src, id: e.id })
   }
 }
