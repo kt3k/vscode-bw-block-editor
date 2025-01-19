@@ -8,8 +8,10 @@ import type {
   WebviewMessageUpdate,
 } from "./types.ts"
 
+const { workspace, window, Uri } = vscode
+
 export function activate(context: vscode.ExtensionContext) {
-  const subscription = vscode.window.registerCustomEditorProvider(
+  const subscription = window.registerCustomEditorProvider(
     "kt3k.bwBlock",
     {
       resolveCustomTextEditor(document, panel, _) {
@@ -32,19 +34,14 @@ class BlockEditor {
     this.#document = document
     const webview = this.#webview = panel.webview
     webview.options = { enableScripts: true }
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(uri, "out/webview.js"),
-    )
-    const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(uri, "src/style.css"),
-    )
+    const u = (path: string) => webview.asWebviewUri(Uri.joinPath(uri, path))
     webview.html = /* html */ `
       <!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <link href="${styleMainUri}" rel="stylesheet" />
+          <link href="${u("src/style.css")}" rel="stylesheet" />
           <style>
             canvas {
               image-rendering: crisp-edges;
@@ -56,22 +53,13 @@ class BlockEditor {
           <div class="cell-switch fixed left-0 top-0 px-1 bg-neutral-900 shadow shadow-neutral-600"></div>
           <div class="spacer h-10"></div>
           <div class="main-container"></div>
-          <script src="${scriptUri}" type="module"></script>
+          <script src="${u("out/webview.js")}" type="module"></script>
         </body>
       </html>
     `
-    const subscription = vscode.workspace.onDidChangeTextDocument((e) => {
-      if (e.document.uri.toString() !== document.uri.toString()) return
-      this.#updateWebview()
-    })
-    panel.onDidDispose(() => subscription.dispose())
-    webview.onDidReceiveMessage((e: WebviewMessage) => {
-      if (e.type === "loadImage") {
-        this.#loadImage(e)
-      } else if (e.type === "update") {
-        this.#update(e)
-      }
-    })
+    const sub = workspace.onDidChangeTextDocument((e) => this.#onDocChange(e))
+    panel.onDidDispose(() => sub.dispose())
+    webview.onDidReceiveMessage((e) => this.#onMessage(e))
     this.#updateWebview()
   }
 
@@ -87,6 +75,19 @@ class BlockEditor {
     })
   }
 
+  #onDocChange(e: vscode.TextDocumentChangeEvent) {
+    if (e.document.uri.toString() !== this.#document.uri.toString()) return
+    this.#updateWebview()
+  }
+
+  #onMessage(e: WebviewMessage) {
+    if (e.type === "loadImage") {
+      this.#loadImage(e)
+    } else if (e.type === "update") {
+      this.#update(e)
+    }
+  }
+
   #update(e: WebviewMessageUpdate) {
     const edit = new vscode.WorkspaceEdit()
     edit.replace(
@@ -94,14 +95,13 @@ class BlockEditor {
       new vscode.Range(0, 0, this.#document.lineCount, 0),
       JSON.stringify(e.map, null, 2),
     )
-    vscode.workspace.applyEdit(edit)
+    workspace.applyEdit(edit)
   }
 
-  async #loadImage(e: WebviewMessageLoadImage) {
-    const uri = vscode.Uri.parse(e.uri)
-    const data = await vscode.workspace.fs.readFile(uri)
+  async #loadImage({ uri, id }: WebviewMessageLoadImage) {
+    const data = await workspace.fs.readFile(Uri.parse(uri))
     const base64 = Buffer.from(data).toString("base64")
-    const src = `data:image/png;base64,${base64}`
-    this.#postMessage({ type: "loadImageResponse", text: src, id: e.id })
+    const text = `data:image/png;base64,${base64}`
+    this.#postMessage({ type: "loadImageResponse", text, id })
   }
 }
