@@ -3,7 +3,11 @@
   "displayName": "BW Block Editor",
   "description": "The editor for BW blocks",
   "version": "0.1.0",
-  "publisher": "Yoshiya Hinosawa",
+  "publisher": "kt3k",
+  "files": [
+    "out",
+    "LICENSE"
+  ],
   "private": true,
   "license": "MIT",
   "repository": {
@@ -31,10 +35,8 @@
       }
     ]
   },
-  "dependencies": {
-    "@types/vscode-webview": "^1.57.5"
-  },
   "devDependencies": {
+    "@types/vscode-webview": "^1.57.5",
     "@types/vscode": "^1.96.0"
   }
 }
