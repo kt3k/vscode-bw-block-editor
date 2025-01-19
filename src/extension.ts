@@ -32,7 +32,7 @@ class BlockEdit implements vscode.CustomTextEditorProvider {
       if (e.type === "loadImage") {
         this.#loadImage(e, webview)
       } else if (e.type === "update") {
-        this.#update(document, e.map)
+        this.#update(document, e)
       }
     })
   }
