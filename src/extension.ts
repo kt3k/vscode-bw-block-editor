@@ -11,10 +11,9 @@ import type {
 const { workspace, window, Uri } = vscode
 
 export function activate(context: vscode.ExtensionContext) {
-  const extensionUri = context.extensionUri
   const provider: vscode.CustomTextEditorProvider = {
     resolveCustomTextEditor: (doc, panel) =>
-      blockEditor(extensionUri, doc, panel),
+      blockEditor(context.extensionUri, doc, panel),
   }
   const sub = window.registerCustomEditorProvider("kt3k.bwBlock", provider)
   context.subscriptions.push(sub)
