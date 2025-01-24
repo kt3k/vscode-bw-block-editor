@@ -29,7 +29,7 @@
         "displayName": "Block",
         "selector": [
           {
-            "filenamePattern": "*.block.json"
+            "filenamePattern": "block_*.json"
           }
         ]
       }
