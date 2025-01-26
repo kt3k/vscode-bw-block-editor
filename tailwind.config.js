@@ -1,3 +1,1 @@
-export default {
-  content: ["./src/**/*.{html,ts}"],
-}
+export default { content: ["./*.ts"] }
