@@ -1,5 +1,5 @@
 import * as vscode from "vscode"
-import { Buffer } from "node:buffer"
+import { encodeBase64 } from "@std/encoding/base64"
 import type {
   ExtensionMessage,
   WebviewMessage,
@@ -87,7 +87,7 @@ function editor(
 
   async function loadImage({ uri, id }: WebviewMessageLoadImage) {
     const data = await workspace.fs.readFile(Uri.parse(uri))
-    const base64 = Buffer.from(data).toString("base64")
+    const base64 = encodeBase64(data)
     const text = `data:image/png;base64,${base64}`
     postMessage({ type: "loadImageResponse", text, id })
   }

@@ -2,6 +2,7 @@
   "imports": {
     "@kt3k/bw": "jsr:@kt3k/bw@^0.1.14",
     "@kt3k/cell": "jsr:@kt3k/cell@^0.7.6",
+    "@std/encoding": "jsr:@std/encoding@^1.0.6",
     "vscode": "./vscode.js"
   },
   "tasks": {

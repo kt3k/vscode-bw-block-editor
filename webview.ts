@@ -1,7 +1,7 @@
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext"/>
 /// <reference lib="dom" />
-/// <reference types="npm:@types/vscode-webview" />
+/// <reference types="@types/vscode-webview" />
 
 import { BlockMap, TerrainBlock } from "@kt3k/bw/models"
 import { floorN } from "@kt3k/bw/util/math"
