@@ -13,13 +13,13 @@ const { workspace, window, Uri } = vscode
 export function activate(context: vscode.ExtensionContext) {
   const provider: vscode.CustomTextEditorProvider = {
     resolveCustomTextEditor: (doc, panel) =>
-      blockEditor(context.extensionUri, doc, panel),
+      editor(context.extensionUri, doc, panel),
   }
   const sub = window.registerCustomEditorProvider("kt3k.bwBlock", provider)
   context.subscriptions.push(sub)
 }
 
-function blockEditor(
+function editor(
   uri: vscode.Uri,
   document: vscode.TextDocument,
   panel: vscode.WebviewPanel,
@@ -72,11 +72,8 @@ function blockEditor(
   }
 
   function onMessage(e: WebviewMessage) {
-    if (e.type === "loadImage") {
-      loadImage(e)
-    } else if (e.type === "update") {
-      update(e)
-    }
+    if (e.type === "loadImage") loadImage(e)
+    else if (e.type === "update") update(e)
   }
 
   function update(e: WebviewMessageUpdate) {
