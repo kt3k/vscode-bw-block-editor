@@ -2,7 +2,7 @@
   "imports": {
     "@kt3k/bw": "jsr:@kt3k/bw@^0.1.14",
     "@kt3k/cell": "jsr:@kt3k/cell@^0.7.6",
-    "vscode": "./empty.ts"
+    "vscode": "./vscode.js"
   },
   "tasks": {
     "compile": "deno task extension && deno task webview && deno task webview-style",

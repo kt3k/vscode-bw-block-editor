@@ -1,4 +1,3 @@
-// @ts-types="@types/vscode"
 import * as vscode from "vscode"
 import { Buffer } from "node:buffer"
 import type {
